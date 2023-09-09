@@ -1,62 +1,37 @@
-
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const mysql = require('mysql2');
-const path = require('path');
-
+const express = require("express")
 const app = express();
-const port = 5500;
+const mysql = require('mysql2');
 
-// กำหนดการใช้งาน bodyParser สำหรับรับข้อมูลจาก form ในรูปแบบ URL-encoded
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.json());
+const parseUrl = require('body-parser');
+let encodeUrl = parseUrl.urlencoded({ extended: false });
 
-// กำหนดการเชื่อมต่อฐานข้อมูล MySQL
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'Merlin_2',
-  database: 'registration_db'
+const con = mysql.createConnection({
+    host: "localhost",
+    user: "root", // my username
+    password: "Merlin_2", // my password
+    database: "registration_db"
 });
 
-// เชื่อมต่อกับฐานข้อมูล
-db.connect((err) => {
-  if (err) {
-    console.error('Database connection failed: ', err);
-  } else {
-    console.log('Connected to the database');
-  }
+app.get('/',(req, res)=>{
+    // res.send("Hello, world!");
+    res.sendFile(__dirname + '/register.html')
 });
-
-// เรียกหน้าฟอร์มสมัครสมาชิก
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '/signup.html'));
-});
-
-// รับข้อมูลจากฟอร์มและเพิ่มลงในฐานข้อมูล
-app.post('/signup', (req, res) => {
-    console.log("test url post")
-    res.send('POST request received');
-  const userData = {
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password
-  };
-  const sql = 'INSERT INTO users (username, email, password) VALUES (?, ?, ?)';
-  console.log(userData)
-  db.query(sql, userData, (err, result) => {
+app.post('/register.html', encodeUrl,(req, res) => {
+   const username = req.body.username 
+   const email = req.body.email 
+   const password = req.body.password 
+   console.log(username,email,password)
+   var sql = `INSERT INTO users (username, email, password) VALUES ('${username}', '${email}', '${password}')`;
+   con.query(sql, (err, result) => {
     if (err) {
-      console.error('Error inserting data: ', err);
-      res.status(403).json({ message: 'err' });
+        console.log(err)
     } else {
-      console.log('Data inserted');
-      res.status(200).json({ message: 'ok' });
+        console.log("success")
+        res.send("<h1>success</h1>")
     }
-  });
-});
+   })
+})
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.listen(5500,()=>{
+    console.log("Server running on port 5500");
 });
